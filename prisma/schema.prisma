@@ -1,0 +1,204 @@
+generator client {
+ provider = "prisma-client-js"
+ engineType = "client"
+}
+datasource db {
+ provider = "postgresql"
+ url = env("DATABASE_URL")
+}
+model Collection {
+ id String @id @default(cuid())
+ name String
+ slug String @unique
+ description String @default("")
+ image String @default("")
+ products Product[]
+ createdAt DateTime @default(now())
+ updatedAt DateTime @updatedAt
+}
+model Product {
+ id String @id @default(cuid())
+ name String
+ slug String @unique
+ description String
+ story String @default("")
+ price Int
+ comparePrice Int?
+ category String @default("Socks")
+ chapter String @default("01")
+ composition String @default("Specifications to be confirmed.")
+ fit String @default("")
+ care String @default("")
+ features String[]
+ images String[]
+ video String?
+ status String @default("DRAFT")
+ seoTitle String @default("")
+ seoDescription String @default("")
+ collectionId String
+ collection Collection @relation(fields:[collectionId],references:[id])
+ variants Variant[]
+ createdAt DateTime @default(now())
+ updatedAt DateTime @updatedAt
+}
+model Variant {
+ id String @id @default(cuid())
+ productId String
+ product Product @relation(fields:[productId],references:[id],onDelete:Cascade)
+ sku String @unique
+ color String
+ colorHex String @default("#222222")
+ size String
+ stock Int @default(0)
+ image String?
+ price Int?
+ createdAt DateTime @default(now())
+ updatedAt DateTime @updatedAt
+ @@unique([productId,color,size])
+}
+model Customer {
+ id String @id @default(cuid())
+ email String @unique
+ name String
+ phone String
+ orders Order[]
+ createdAt DateTime @default(now())
+ updatedAt DateTime @updatedAt
+}
+model Order {
+ id String @id @default(cuid())
+ number String @unique
+ accessToken String @unique
+ idempotencyKey String @unique
+ requestHash String
+ customerId String
+ customer Customer @relation(fields:[customerId],references:[id])
+ address Json
+ items Json
+ subtotal Int
+ shipping Int
+ discount Int @default(0)
+ total Int
+ currency String @default("EGP")
+ discountCode String?
+ paymentMethod String
+ paymentStatus String @default("PENDING")
+ status String @default("PENDING")
+ inventoryReleased Boolean @default(false)
+ paymentReference String? @unique
+ expiresAt DateTime?
+ events OrderEvent[]
+ payments Payment[]
+ createdAt DateTime @default(now())
+ updatedAt DateTime @updatedAt
+}
+model OrderEvent {
+ id String @id @default(cuid())
+ orderId String
+ order Order @relation(fields:[orderId],references:[id],onDelete:Cascade)
+ status String
+ note String @default("")
+ internal Boolean @default(false)
+ createdAt DateTime @default(now())
+}
+model Payment {
+ id String @id @default(cuid())
+ orderId String
+ order Order @relation(fields:[orderId],references:[id])
+ provider String
+ providerEventId String @unique
+ status String
+ amount Int
+ createdAt DateTime @default(now())
+}
+model Discount {
+ id String @id @default(cuid())
+ code String @unique
+ type String
+ value Int
+ minimum Int @default(0)
+ startsAt DateTime @default(now())
+ endsAt DateTime?
+ usageLimit Int?
+ used Int @default(0)
+ singleUse Boolean @default(false)
+ automatic Boolean @default(false)
+ active Boolean @default(true)
+ createdAt DateTime @default(now())
+ updatedAt DateTime @updatedAt
+}
+model ShippingRate {
+ id String @id @default(cuid())
+ governorate String @unique
+ price Int
+ active Boolean @default(true)
+ updatedAt DateTime @updatedAt
+}
+model Content {
+ id String @id @default(cuid())
+ key String @unique
+ title String
+ body String
+ image String @default("")
+ updatedAt DateTime @updatedAt
+}
+model SiteSettings {
+ id String @id @default("site")
+ freeShippingThreshold Int @default(100000)
+ lowStockThreshold Int @default(5)
+ announcement String @default("Everyday essentials. Your pace. Your way.")
+ shippingNote String @default("Demo store. Orders are for testing only.")
+ whatsapp String @default("")
+ email String @default("hello@mashy24.com")
+ seoTitle String @default("MASHY — Everyday, in motion.")
+ seoDescription String @default("Modern lifestyle essentials. Born from an Egyptian word. Built for everyday movement. Keep Mashy.")
+ updatedAt DateTime @updatedAt
+}
+model AdminUser {
+ id String @id @default(cuid())
+ email String @unique
+ passwordHash String
+ name String
+ role String @default("EDITOR")
+ active Boolean @default(true)
+ sessionVersion Int @default(1)
+ createdAt DateTime @default(now())
+ updatedAt DateTime @updatedAt
+}
+model AuditLog {
+ id String @id @default(cuid())
+ actorId String
+ action String
+ resource String
+ resourceId String
+ createdAt DateTime @default(now())
+}
+model RateLimit {
+ key String @id
+ count Int
+ expiresAt DateTime
+}
+model EmailOutbox {
+ id String @id @default(cuid())
+ to String
+ subject String
+ html String
+ status String @default("PENDING")
+ attempts Int @default(0)
+ createdAt DateTime @default(now())
+ updatedAt DateTime @updatedAt
+}
+model Inquiry {
+ id String @id @default(cuid())
+ name String
+ email String
+ message String
+ createdAt DateTime @default(now())
+}
+model Media {
+ id String @id @default(cuid())
+ url String
+ alt String
+ type String @default("image")
+ createdAt DateTime @default(now())
+}

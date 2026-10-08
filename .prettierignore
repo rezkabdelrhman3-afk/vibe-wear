@@ -1,0 +1,9 @@
+.next
+node_modules
+package-lock.json
+public
+prisma/migrations
+test-results
+playwright-report
+.local
+.env

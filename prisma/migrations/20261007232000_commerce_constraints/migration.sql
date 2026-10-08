@@ -1,0 +1,12 @@
+ALTER TABLE "Variant" ADD CONSTRAINT "Variant_stock_nonnegative" CHECK (stock >= 0), ADD CONSTRAINT "Variant_price_nonnegative" CHECK (price IS NULL OR price >= 0);
+ALTER TABLE "Product" ADD CONSTRAINT "Product_price_nonnegative" CHECK (price >= 0), ADD CONSTRAINT "Product_status_valid" CHECK (status IN ('DRAFT','ACTIVE','ARCHIVED'));
+ALTER TABLE "Order" ADD CONSTRAINT "Order_totals_valid" CHECK (subtotal >= 0 AND shipping >= 0 AND discount >= 0 AND discount <= subtotal AND total = subtotal + shipping - discount), ADD CONSTRAINT "Order_status_valid" CHECK (status IN ('PENDING','CONFIRMED','PREPARING','SHIPPED','DELIVERED','CANCELLED','RETURNED','REFUNDED')), ADD CONSTRAINT "Order_payment_status_valid" CHECK ("paymentStatus" IN ('PENDING','PAID','FAILED','REFUNDED'));
+ALTER TABLE "Discount" ADD CONSTRAINT "Discount_values_valid" CHECK (value >= 0 AND minimum >= 0 AND used >= 0 AND ("usageLimit" IS NULL OR "usageLimit" > 0) AND ((type = 'PERCENT' AND value <= 100) OR type = 'FIXED'));
+ALTER TABLE "ShippingRate" ADD CONSTRAINT "ShippingRate_price_nonnegative" CHECK (price >= 0);
+ALTER TABLE "SiteSettings" ADD CONSTRAINT "SiteSettings_thresholds_valid" CHECK ("freeShippingThreshold" >= 0 AND "lowStockThreshold" >= 0);
+ALTER TABLE "AdminUser" ADD CONSTRAINT "AdminUser_role_valid" CHECK (role IN ('ADMIN','EDITOR'));
+CREATE INDEX "Order_status_createdAt_idx" ON "Order" (status,"createdAt");
+CREATE INDEX "Order_customerId_discountCode_idx" ON "Order" ("customerId","discountCode");
+CREATE INDEX "Order_expiresAt_idx" ON "Order" ("expiresAt") WHERE "paymentStatus"='PENDING';
+CREATE INDEX "Product_status_category_idx" ON "Product" (status,category);
+CREATE INDEX "EmailOutbox_status_idx" ON "EmailOutbox" (status);
